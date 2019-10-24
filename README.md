@@ -16,11 +16,15 @@ Requirements:
 
 
 Sensors:  
-DHT22 (Humidity and temperature) - 0-100%RH, (-40)-80 degrees celcius, resolution of 0.1C and 0.1% RH  
-Water level sensor, maybe just a distance sensor measuring on something floating on the water  
+ - DHT22 (Humidity and temperature) - 0-100%RH, (-40)-80 degrees celcius, resolution of 0.1C and 0.1% RH  
+ - Water level sensor, maybe just a distance sensor measuring on something floating on the water  
 
 Actuators:  
-Small 12V waterpump, possible to power through batter charged by solarpanel.  
-https://www.banggood.com/DC-12V-Solar-Powered-Water-Pump-700LH-Brushless-Magnetic-Submersible-Water-Pumps-p-1275049.html?akmClientCountry=DK&&cur_warehouse=CN  
-Water misting nozzle (don't know if pressure of smaller pumps is adequate):  
-https://www.banggood.com/22PcsSet-5M-Hose-Outdoor-Cool-Patio-Misting-System-Fan-Cooler-Water-Mist-Automatic-Sprayer-Mist-Coolant-Drip-DIY-Garden-Irrigation-System-p-1512114.html?akmClientCountry=DK&rmmds=search&cur_warehouse=CN  
+ - Small 12V waterpump, possible to power through batter charged by solarpanel.  
+   https://www.banggood.com/DC-12V-Solar-Powered-Water-Pump-700LH-Brushless-Magnetic-Submersible-Water-Pumps-p-1275049.html?akmClientCountry=DK&&cur_warehouse=CN  
+ - Water misting nozzle (don't know if pressure of smaller pumps is adequate):  
+   https://www.banggood.com/22PcsSet-5M-Hose-Outdoor-Cool-Patio-Misting-System-Fan-Cooler-Water-Mist-Automatic-Sprayer-Mist-Coolant-Drip-DIY-Garden-Irrigation-System-p-1512114.html?akmClientCountry=DK&rmmds=search&cur_warehouse=CN  
+
+API:  
+ - OpenWeatherMap  
+ - Database / Thingspeak
