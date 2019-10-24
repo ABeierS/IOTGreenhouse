@@ -6,12 +6,13 @@ For actuators we have thought of using pumps to fill up a capillary box froma ra
 
 
 Requirements:  
-Operating in temperature range of -10 to 50 degrees  
-Logging temperature and humidity in the greenhouse every 15 minutes  
-Post the data gathered to visualize the history of the climate in greenhous  
-Can send email/sms  
-Get weather forecast to warn the owner  
-Prefferably the whole system can be powered through solar panels  
+ - Operating in temperature range of -10 to 50 degrees  
+ - Operating relative humidity range of 0 to 90%  
+ - Logging temperature and humidity in the greenhouse every 15 minutes  
+ - Post the data gathered to visualize the history of the climate in greenhous  
+ - Can send email/sms  
+ - Get weather forecast to warn the owner  
+ - Preferably the whole system can be powered through solar panels  
 
 
 Sensors:  
