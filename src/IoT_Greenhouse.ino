@@ -14,6 +14,8 @@
 
 // defines
 #define CUSTOM_DEBUG
+#define EMAIL
+//#define SMS
 
 
 #define MAXTEMP   25        // Degrees
@@ -47,6 +49,8 @@ system_tick_t lastTime = 0;
 
 bool hasLogged = false;
 
+char buf[128] = {0};
+
 // Forward declarations
 void dht_wrapper(void);
 void gotForecast(const char *, const char *);
@@ -54,6 +58,8 @@ long getDistance(void);
 void checkForecast(void);
 void checkTank(void);
 void getDHTVals(void);
+
+void sendWarning(String);
 
 
 // Setup DHT module
@@ -80,7 +86,6 @@ void setup() {
 
 
 void loop() {
-  // The core of your code will likely live here.
   
 #ifdef CUSTOM_DEBUG
   if(millis()-lastTime > 10000){
@@ -109,36 +114,50 @@ void loop() {
   if(hasLogged) 
     System.sleep(SLEEP_MODE_DEEP, SLEEP_TIME);
   else if(millis() > 10000){
-    // Send Warning no DHT vals could be retrieved
+    sendWarning("No temperature or humidty values could be received from sensor, please check system.")
     System.sleep(SLEEP_MODE_DEEP, SLEEP_TIME);
   }
 #endif
 }
 
+void sendWarning(String msg){
+#ifdef EMAIL
+  Particle.publish("MAIL_warning",  msg, PRIVATE);
+#endif
+#ifdef SMS
+  Particle.publish("SMS_warning", msg, PRIVATE);
+#endif
+#ifdef CUSTOM_DEBUG
+  Serial.println(msg);
+#endif
+}
+
+
 void getDHTVals(){
+  char buf[128] = {0};
   currenttemp = DHT.getCelsius();
   currenthumid = DHT.getHumidity();
+  Particle.publish("IndoorTemp", String(currenttemp), PRIVATE);
+  //Particle.publish("IndoorHumid", String(currenthumid), PRIVATE);
 
 #ifdef CUSTOM_DEBUG
   Serial.printlnf("DHT: Temp = %d, Humid = %d",currenttemp,currenthumid);
 #endif
 
   if(currenttemp > MAXTEMP){
-    // Send warning, max temp exceded
+    sprintf(buf, "Temperature in Greenhouse has exceded %d degrees, and is now %d degrees.",MAXTEMP,currenttemp);
+    sendWarning(buf);
+
 #ifdef CUSTOM_DEBUG
     Serial.printlnf("Temp exceded with: %d", currenttemp);
 #endif
   }
   if(currenthumid > MAX_HUMIDITY){
-    // Send warning, max humidity exceded
-#ifdef CUSTOM_DEBUG
-    Serial.printlnf("Humid exceded with: %d", currenthumid);
-#endif
+    sprintf(buf, "Humidity in Greenhouse has exceded %d percent, and is now %d percent.",MAX_HUMIDITY,currenthumid);
+    sendWarning(buf);
   }else if(currenthumid < MIN_HUMIDITY){
-    // Send warning, too low humidity
-#ifdef CUSTOM_DEBUG
-    Serial.printlnf("Humid too low with: %d", currenthumid);
-#endif
+    sprintf(buf, "Humidity in Greenhouse has fallen below %d percent.",MIN_HUMIDITY);
+    sendWarning(buf);
   }
 
 }
@@ -163,7 +182,7 @@ void checkTank(){
       Serial.printlnf("Distance: %d",distance);
 #endif
       if(millis()-startTime > MAX_TIME_PUMP){
-        // Warning couldn't fill tank
+        sendWarning("Could not fill tank");
 #ifdef CUSTOM_DEBUG
         Serial.printlnf("Distance has not been corrected, exceeded threshold time");
 #endif
@@ -229,8 +248,8 @@ void gotForecast(const char *event, const char *data) {
 #endif
 
   if((temp + ((101-clouds) / 10)) > MAXTEMP){
-    // Send Warning, date and time dt is exceeding limits
-    // "The temperature limit of $(MAXTEMP) might be exceeded $(timeObject->tm_wday) the $(timeObject->tm_mday) of $(timeObject->tm_mon) at $(timeObject->tm_hour):$(timeObject->tm_min)"
+    sprintf(buf, "The temperature limit of %d degrees might be exceded %s.",MAXTEMP, asctime(timeObject));
+    sendWarning(buf);
 #ifdef CUSTOM_DEBUG
   Serial.printlnf("Temp Exceded, hook");
 #endif
