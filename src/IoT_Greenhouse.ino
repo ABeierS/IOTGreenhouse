@@ -14,7 +14,7 @@
 
 // defines
 #define CUSTOM_DEBUG_WARNING
-#define CUSTOM_DEBUG
+//#define CUSTOM_DEBUG
 //#define EMAIL
 //#define SMS
 
@@ -22,9 +22,9 @@
 #define MAXTEMP   25          // Degrees
 #define MAX_HUMIDITY 85       // Percent
 #define MIN_HUMIDITY 10       // Percent
-#define MAX_TIME_PUMP 10000   // Milliseconds
-#define SLEEP_TIME 1          // Seconds
-#define SLEEP_TIME_DEBUG 5000 // millis
+#define MAX_TIME_PUMP 10000   // Milliseconds, 120 seconds for 20 L in box
+#define SLEEP_TIME 15          // Seconds
+#define SLEEP_TIME_DEBUG 15000 // millis
 #define DEPTH_THRESHOLD 70    // cm
 
 
@@ -34,8 +34,10 @@
 #define HC_TRIG 5
 #define HC_ECHO 6
 
-#define PUMP_TRIG 4
-#define PUMP_SPEED_PERIOD 126
+#define PUMP_TRIG 3
+#define PUMP_SPEED_PERIOD 255
+
+STARTUP(System.enableFeature(FEATURE_RETAINED_MEMORY));
 
 // Variables
 int clouds = 0;
@@ -52,6 +54,7 @@ system_tick_t lastTime = 0;
 
 volatile bool hasLogged;
 volatile bool forecastGotten;
+retained volatile bool tempFlag = false;
 
 char buf[128] = {0};
 
@@ -115,7 +118,7 @@ void loop() {
   }
 #else
 // Timeout, if no temperature has been gathered go to sleep
-  if(hasLogged && forecastGotten){
+  if((hasLogged && forecastGotten) || millis()-lastTime > SLEEP_TIME_DEBUG){
     System.sleep(SLEEP_MODE_DEEP, SLEEP_TIME);
   }
   // TODO: Make sure if no webhook or dht sensor vals is returned, go back to sleep. Prevents wasting power, if nothing is working.
@@ -140,23 +143,23 @@ void getDHTVals(){
   currenttemp = DHT.getCelsius();
   currenthumid = DHT.getHumidity();
   char dhtMsg[256];
-  // assuming batvolts is double or float
   snprintf(dhtMsg, sizeof(dhtMsg), "{\"temp\":%d,\"humid\":%d}", currenttemp, currenthumid);
   Particle.publish("dhtValHook", dhtMsg, PRIVATE);
-  //Particle.publish("IndoorTemp", String(currenttemp), PRIVATE);
-  //Particle.publish("IndoorHumid", String(currenthumid), PRIVATE);
 
 #ifdef CUSTOM_DEBUG
   Serial.printlnf("DHT: Temp = %d, Humid = %d",currenttemp,currenthumid);
 #endif
 
-  if(currenttemp > MAXTEMP){
+  if(currenttemp > MAXTEMP && tempFlag == false){
     sprintf(buf, "Temperature in Greenhouse has exceded %d degrees, and is now %d degrees.",MAXTEMP,currenttemp);
     sendWarning(buf);
+    tempFlag = true;
 
 #ifdef CUSTOM_DEBUG
     Serial.printlnf("Temp exceded with: %d", currenttemp);
 #endif
+  }else if(currenttemp < MAXTEMP - 2 && tempFlag == true){
+    tempFlag = false;
   }
   if(currenthumid > MAX_HUMIDITY){
     sprintf(buf, "Humidity in Greenhouse has exceded %d percent, and is now %d percent.",MAX_HUMIDITY,currenthumid);
@@ -201,14 +204,6 @@ void checkTank(){
   }
 }
 
-// This wrapper is in charge of calling
-// must be defined like this for the lib work
-/*
-void dht_wrapper() {
-    DHT.isrCallback();
-}
-*/
-
 long getDistance(void){
   long distance,duration;
   digitalWrite(HC_TRIG, HIGH);
@@ -222,9 +217,6 @@ long getDistance(void){
 
 void gotForecast(const char *event, const char *data) {
   // format: {{list.7.dt}}~{{list.7.main.temp}}~{{list.7.main.humidity}}~{{list.7.clouds.all}}
-          
-
-
   char buffer[64] = {0};
   char del[] = "~";
   int counter = 0;
@@ -267,7 +259,6 @@ void gotForecast(const char *event, const char *data) {
     Serial.printlnf("Temp Exceded, hook");
 #endif
   }
-  //Particle.publish("Forecast_gotten", PRIVATE);
   forecastGotten = true;
 }
 
