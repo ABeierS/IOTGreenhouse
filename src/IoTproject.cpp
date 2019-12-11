@@ -113,7 +113,7 @@ void loop() {
   }
 
   //reset temp_flag when temperature is below threshold
-  if(currenttemp < MAXTEMP && temp_flag == 1)
+  if(currenttemp < MAXTEMP-2 && temp_flag == 1)
   {
     temp_flag = 0;
   }
